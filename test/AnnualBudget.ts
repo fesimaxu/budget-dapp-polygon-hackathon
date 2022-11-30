@@ -88,10 +88,8 @@ describe("AnnualBudget", function () {
         const budget = await annualbudget.Budgets(budgetCount)
 
         assert.equal(budget.ID.toNumber(), budgetCount.toNumber())
-        assert.equal(budget.ID.toNumber(), budgetCount.toNumber())
-        //assert.equal(budget.item, 'Default Budget Item')
         assert.equal(budget.created, false)
-        //assert.equal(budgetCount.toNumber(), 1)
+
       });
     
       it("Should create a budget and Emit event", async function () {
@@ -111,7 +109,7 @@ describe("AnnualBudget", function () {
 
         await expect(annualbudget.createBudget("shoe",10))
   .to.emit(annualbudget, 'BudgetCreated')
-  .withArgs(2, 10,"shoe", true);
+  .withArgs(1, 10,"shoe", true);
 
       });
     });
@@ -191,14 +189,36 @@ describe("AnnualBudget", function () {
        const christmasTime = await time.increaseTo(unlockTime);
 
         const contractBal = await matic.balanceOf(annualbudget.address)
-        const result = await annualbudget.connect(owner).withdraw()
-        const contractBal2 = await matic.balanceOf(annualbudget.address)
+        await annualbudget.connect(owner).withdraw()
+       
         const ownerBal = await matic.balanceOf(owner.address)
-        await expect(ownerBal).to.equal(funds)
+        expect(ownerBal).to.equal(funds)
+      });
+       it("Should emit an event on withdrawals", async function () {
+        const { annualbudget, unlockTime, matic, otherAccount,owner } = await loadFixture(
+          deployAnnualBudget
+        );
 
-        // await expect(annualbudget.withdraw())
-        //   .to.emit(annualbudget, "Withdrawal")
-        //   .withArgs(contractBal2,anyValue); // We accept any value as `when` arg
+        await matic.mint(otherAccount.address, ethers.utils.parseEther("200"));
+
+        const bal = await matic.balanceOf(otherAccount.address);
+
+        const funds = ethers.utils.parseEther("10");
+
+        const spendingAmount = ethers.utils.parseEther("3");
+
+         await matic
+       .connect(otherAccount)
+       .approve(annualbudget.address, funds);
+
+        const depositFund = await annualbudget.connect(otherAccount).depositBudgetFund(funds)
+
+        await time.increaseTo(unlockTime);
+
+
+        await expect(annualbudget.withdraw())
+          .to.emit(annualbudget, "Withdrawal")
+          .withArgs(funds,anyValue); // We accept any value as `when` arg
       });
     });
 
