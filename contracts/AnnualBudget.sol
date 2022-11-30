@@ -34,6 +34,8 @@ contract AnnualBudget {
         bool created;
     }
 
+    budgetItems[] myBudgetList;
+
     mapping(uint256 => budgetItems) public Budgets;
     mapping(uint256 => bool) public removeItem;
 
@@ -47,15 +49,26 @@ contract AnnualBudget {
     }
 
     function createBudget(string memory _item, uint256 _maticAmount) public {
-        budgetCount++;
+       
         if (Budgets[budgetCount].created == true) {
             revert("Item already created");
         }
 
         budgetItems memory itemOnlist = Budgets[budgetCount];
         itemOnlist = budgetItems(budgetCount, _maticAmount, _item, true);
+        myBudgetList.push(itemOnlist);
+        
 
         emit BudgetCreated(budgetCount, _maticAmount, _item, true);
+        budgetCount++;
+    }
+
+    function myList() external view returns(budgetItems[] memory){
+        return myBudgetList;
+    } 
+
+    function listItem(uint256 _ID) external view returns(budgetItems memory){
+        return Budgets[_ID];
     }
 
     function balance() public view returns(uint256 contractBalance){
